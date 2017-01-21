@@ -104,7 +104,7 @@ if rpm -qa | grep -i "holland-1." ;
 		estimate=$(grep -i estimate /etc/holland/backupsets/$backupset.conf | grep -v ^#); 
 		echo -e "\nMysql Datadir :";
 		du -hs $(grep -i datadir  /etc/my.cnf | grep -v ^#| awk -F "=" '{print $(NF-0)}')/;  
-		$(ls -1tr $(for j in $(for i in `ls -1t /var/log/holland/*`; do file -s $i ; done | grep -v empty |  awk -F ":" '{print $1}'); do echo "$j" `zcat $j | wc -l`; done | awk '$2 > 10' | awk '{print $1}') | tail -1)
+		last_log=$(ls -1tr $(for j in $(for i in `ls -1t /var/log/holland/*`; do file -s $i ; done | grep -v empty |  awk -F ":" '{print $1}'); do echo "$j" `zcat $j | wc -l`; done | awk '$2 > 10' | awk '{print $1}') | tail -1)
 file -s $last_log | grep gzip > /dev/null;
 		if [ $? == 0 ];
 			then 
