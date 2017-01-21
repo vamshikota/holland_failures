@@ -92,6 +92,7 @@ fi;
 echo -e "\n\nChecking Holland..";  
 
 ## If Holland Instaled 
+
 if rpm -qa | grep -i "holland-1." ; 
 	then 
 		holl_log="/var/log/holland"; 
@@ -103,6 +104,13 @@ if rpm -qa | grep -i "holland-1." ;
 		estimate=$(grep -i estimate /etc/holland/backupsets/$backupset.conf | grep -v ^#); 
 		echo -e "\nMysql Datadir :";
 		du -hs $(grep -i datadir  /etc/my.cnf | grep -v ^#| awk -F "=" '{print $(NF-0)}')/;  
+		$(ls -1tr $(for j in $(for i in `ls -1t /var/log/holland/*`; do file -s $i ; done | grep -v empty |  awk -F ":" '{print $1}'); do echo "$j" `zcat $j | wc -l`; done | awk '$2 > 10' | awk '{print $1}') | tail -1)
+file -s $last_log | grep gzip > /dev/null;
+		if [ $? == 0 ];
+			then 
+				last_log_gzip=yes; 
+		fi; 
+		
 
 				### If main logfile is empty.. look for .gz files
 		if [ -s $holl_log/holland.log ]; 
@@ -130,9 +138,9 @@ if rpm -qa | grep -i "holland-1." ;
 					done;  
 				
 				rm -rf d; 
-			elif [ -s $holl_log/holland.log.1.gz ]; 
+			elif [[ -s $last_log  && $last_log_gzip == yes ]]; 
 				then 
-					log="$holl_log/holland.log.1.gz";
+					log=$last_log;
 					echo $estimate; 
 					backup_size=`zgrep -i final $log | tail -1 | awk '{print $(NF-0)}'`;
 					echo -e "\nLast backup size is $backup_size"; 
