@@ -3,6 +3,19 @@ clear;
 ## server_number
 #echo -e "\nServer Number : " $(cat /root/.rackspace/server_number ) "\n"; 
 
+## Is it a plesk boxA
+rpm -q psa 2>&1 > /dev/null
+if [[ $? == 1 ]]
+	then
+		echo "Non-Plesk Server"
+		plesk="no"
+	else
+		echo "Plesk Server"
+		plesk="yes"
+		psa_version=$(rpm -q psa)
+fi;
+
+
 echo -e "Checking for Mysql or similar databases..\n"
 ## Finding OS
 if [[ -a /etc/redhat-release ]]; 
@@ -161,6 +174,13 @@ fi
 
 	
 if [[ $db_running == "yes" ]]
+# tf=`mktemp`; for i in $(ps auxf | grep mysqld | grep -vE 'grep|safe'); do echo $i; done | grep "^--"| grep "="| sed -e 's/--//g; s/=/\t/g'| column -t > $tf
+#datadir=$(grep datadir $tf| awk '{print $2}'); echo $datadir
+# rm -rf $tf
+# echo -e "Mysql is running with :"
+# cat $(
+
+
 	then 
 		pkg=$(rpm -qf $(ps auxf | grep mysqld | grep -vE 'grep|safe' | awk '{print $12}') | tail -1); 
 		echo -e "\nMySQL configuration : ";  
