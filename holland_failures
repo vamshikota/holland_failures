@@ -2,8 +2,37 @@ clear;
 ## server_number
 echo -e "\nServer Number : " $(cat /root/.rackspace/server_number ) "\n"; 
 
+## Finding OS
+if [[ -a /etc/redhat-release ]]; 
+	then 
+		os=$(for i in $(cat /etc/redhat-release); 
+			do echo $i | tr "A-Z" "a-z" | awk '$1~ /^(centos|red|hat|[0-9])/'; 
+			done | tr "\n" " " | sed 's/red\ hat/redhat/g');
+	else 
+		os=$(grep -i pretty_name /etc/*-release | cut -d= -f2 | sed 's/\"//g'| awk '{print $1,$2}'| tr "A-Z" "a-z"); fi; 
+
+echo "OS: $os"
+
+## os_short to be used to decide whether to use apt / service / systemctl
+# values could be { rhel6, rhel7, ubuntu} **Any version less then rhel/centos6 will show as rhel6 ##
+os_short_version=$(if [[ $os == ubuntu* ]]; then echo ubuntu; elif [[ $(echo $os|awk '{print $2}'|cut -d. -f1) -le 6 ]]; then echo rhel6; else echo rhel7; fi;)
+
+## Ubuntu or rhel ?
+os_short=$(if [[ $os == ubuntu* ]]; then echo ubuntu; else echo rhel; fi;);  
+
+
 ## Discover Database
-db_temp=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server ' | tail -1);
+
+case "$os_short" in
+	rhel)
+		db_temp=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server ' | tail -1)
+		;;
+	ubuntu)
+		echo "I dont support Ubuntu yet."	
+		exit 1
+		;;
+esac
+
 
 if `ps auxf | grep mysqld | grep -v grep > /dev/null `
 	then mysql_status="running"
