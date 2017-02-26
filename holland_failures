@@ -5,7 +5,12 @@ echo -e "\nServer Number : " $(cat /root/.rackspace/server_number ) "\n";
 ## Discover Database
 db_temp=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server ' | tail -1);
 
-if `ps auxf | grep mysqld | grep -v grep > /dev/null `; 
+if `ps auxf | grep mysqld | grep -v grep > /dev/null `
+	then mysql_status="running"
+	else mysql_status="not_running"
+fi
+	
+if [[ $mysqld_status == "running" ]]
 	then 
 		pkg=$(rpm -qf $(ps auxf | grep mysqld | grep -vE 'grep|safe' | awk '{print $12}') | tail -1); 
 		echo -e "\n\n$pkg \n------ is installed and running"; 
@@ -102,8 +107,9 @@ if rpm -qa | grep -i "holland-1." ;
 		backupset=$(grep -i ^backupsets /etc/holland/holland.conf   | awk '{print $3}'); 
 		echo -e "\nHolland Backupset :" $backupset; 
 		estimate=$(grep -i estimate /etc/holland/backupsets/$backupset.conf | grep -v ^#); 
+		data_dir=$(grep -i datadir  /etc/my.cnf | grep -v ^#| awk -F "=" '{print $(NF-0)}')
 		echo -e "\nMysql Datadir :";
-		du -hs $(grep -i datadir  /etc/my.cnf | grep -v ^#| awk -F "=" '{print $(NF-0)}')/;  
+		du -hs $data_dir 
 		last_log=$(ls -1tr $(for j in $(for i in `ls -1t /var/log/holland/*`; do file -s $i ; done | grep -v empty |  awk -F ":" '{print $1}'); do echo "$j" `zcat $j | wc -l`; done | awk '$2 > 10' | awk '{print $1}') | tail -1)
 file -s $last_log | grep gzip > /dev/null;
 		if [ $? == 0 ];
