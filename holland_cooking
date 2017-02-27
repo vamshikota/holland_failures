@@ -1,7 +1,15 @@
 #!/bin./bash
+
 clear; 
 ## server_number
 #echo -e "\nServer Number : " $(cat /root/.rackspace/server_number ) "\n"; 
+
+lines()
+{
+	for i in $(seq $1)
+		do echo -n "="
+	done;
+}
 
 ## Is it a plesk boxA
 rpm -q psa 2>&1 > /dev/null
@@ -174,20 +182,21 @@ fi
 
 	
 if [[ $db_running == "yes" ]]
-# tf=`mktemp`; for i in $(ps auxf | grep mysqld | grep -vE 'grep|safe'); do echo $i; done | grep "^--"| grep "="| sed -e 's/--//g; s/=/\t/g'| column -t > $tf
-#datadir=$(grep datadir $tf| awk '{print $2}'); echo $datadir
-# rm -rf $tf
-# echo -e "Mysql is running with :"
-# cat $(
-
 
 	then 
-		pkg=$(rpm -qf $(ps auxf | grep mysqld | grep -vE 'grep|safe' | awk '{print $12}') | tail -1); 
-		echo -e "\nMySQL configuration : ";  
 	
-		for i in `seq 20`; 
-			do echo -n "="; 
-		done; 
+	## Db instance parameters
+		tf=`mktemp`; for i in $(ps auxf | grep mysqld | grep -vE 'grep|safe'); do echo $i; done | grep "^--"| grep "="| sed -e 's/--//g; s/=/\t/g'| column -t > $tf
+		datadir=$(grep datadir $tf| awk '{print $2}'); echo $datadir
+		echo -e "\nMysql is running with :"
+		lines 20; echo
+		cat $tf
+		echo -e "\n\n"
+
+
+	## DB Accessible ??
+		echo -e "\nMySQL configuration : ";  
+		lines 20; echo	
 		
 		echo; 
 		mysqladmin stat &> /dev/null; 
@@ -197,34 +206,37 @@ if [[ $db_running == "yes" ]]
 				echo "ERROR    Cant connect to mysql;"; 
 				mysqladmin stat; 
 			else 
-				mysql -Nse "show variables like 'max_connections'" | awk '{print $1,"\t--\t",$2}'; 
-				mysql -Nse "show status like 'max_used%'"| awk '{print $1,"\t--\t",$2}'; 
-				echo -e "Mysql Uptime  \t\t--\t" `mysqladmin stat | awk '{print $2/60/60, "Hours"}' `; 
+				mysql -Nse "show variables like 'max_connections'; show status like 'max_used%'"| awk '{print $1,"\t--\t",$2}' | column -t
+				echo -e "Mysql Uptime  \t\t\t--\t" `mysqladmin stat | awk '{print $2/60/60, "Hours"}' `; 
 		fi;
-		
-		mysql_log=$(ps auxf | grep -i mysql | grep -i log | tr " " "\n"| grep -i error | cut -d "=" -f2);
+
+	## Db_logfile		
+		mysql_log=$(mysql -Nse "show variables like 'log_error'" | awk '{print $2}')
 		echo -e "\n\nLog file : $mysql_log\n\nRecent Errors from logs :"; 
-		
-		for i in `seq 25`; 
-			do 
-				echo -n "="; 
-		done; 
+		lines 26; 	
 		
 		echo;
-		timeout 5 grep -i error $mysql_log | grep $(date +%y%m%d) | tail -20 ;
-		echo -e "\n\n(If any) Mysql Stop/starts today :" ; 
 		
-		for i in `seq 35`; 
-			do 
-				echo -n "="; 
-		done; 
+
+	### Errors from db_logs
+		db_errors=`mktemp`
+		timeout 5 grep -i error $mysql_log | grep $(date +%y%m%d) | tail -20 > $db_errors
+		if [[ ! -s $start_shut  ]] 
+			then
+				echo "None"
+			else
+				cat $db_errors
+		fi
+				
+		echo -e "\n\n(If any) Mysql Stop/starts today :" ; 
+		lines 35
 		echo; 
 
-		### Finding db starts / shutdowns
+	### Finding db starts / shutdowns
 		start_shut=`mktemp`; 
 		timeout 5 egrep 'starting shutdown|ready for connections' -i $mysql_log | grep $(date +%y%m%d) > $start_shut ; 
 		
-		if [ ! -s $start_shut ]; 
+		if [[ ! -s $start_shut ]]; 
 			then 
 				echo "None."; 
 			else 
@@ -233,26 +245,16 @@ if [[ $db_running == "yes" ]]
 		
 		rm -rf $start_shut;  
 	
-	elif [ ! -z "$db_name" ]; 
-		then 
-			echo -e $db_temp "\n------> is insalled but not running."; 
-			setto=$(chkconfig --list $(rpm -ql $db_temp | grep init.d | awk -F "/" '{print $(NF-0)}')); 
-			setto_st=$(echo $setto | awk '{print $5}' |cut -d ":" -f2); 
-			
-			if [ $setto_st == "on" ]; 
-				then 
-					echo -e "\nAnd is set to on"; 
-				else 
-					ehco "\nAnd is not set to on"; 
-			fi; 
-	
-			echo $setto | column -t; 
-	else 
-		echo  -e "\n\nMysql/Mariadb/Percona none of the database is even installed" ;
 fi; 
 
+
+
 ##### Checking Holland now 
-echo -e "\n\nChecking Holland..";  
+echo 
+lines 20; echo
+echo -e "Checking Holland..";  
+lines 20; 
+echo -e "\n\n"
 
 ## If Holland Instaled 
 
@@ -330,3 +332,5 @@ elif ps auxf | grep mysql | egrep -v 'safe|grep';
 else 
 	echo -e "\nNeither Holland Nor Mysqlbackup is installed. However mysql is also not running."; 
 fi;
+
+rm -rf $tf
