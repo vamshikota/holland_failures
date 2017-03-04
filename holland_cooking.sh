@@ -206,8 +206,9 @@ if [[ $db_running == "yes" ]]
 				echo "ERROR    Cant connect to mysql;"; 
 				mysqladmin stat; 
 			else 
+				echo -e "Mysql Uptime  \t ==> \t" `mysqladmin stat | awk '{print $2/60/60, "Hours"}' ` "\n"; 
 				mysql -Nse "show variables like 'max_connections'; show status like 'max_used%'"| awk '{print $1,"\t--\t",$2}' | column -t
-				echo -e "Mysql Uptime  \t\t\t--\t" `mysqladmin stat | awk '{print $2/60/60, "Hours"}' `; 
+				
 		fi;
 
 	## Db_logfile		
