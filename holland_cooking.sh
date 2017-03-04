@@ -144,7 +144,7 @@ elif [[ ! -z $db_name ]] && [[ $os_short_version == "rhel7" ]]
 		fi
 
 		## db_enabled :
-		if [[ $(systemctl is-enabled $db_init  > /dev/null) ]] 
+		if [[ $(systemctl is-enabled $db_init) == "enabled" ]] 
 			then 
 				db_enabled="yes"
 			else
