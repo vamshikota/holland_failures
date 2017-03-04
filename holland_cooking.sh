@@ -132,7 +132,7 @@ if [[ ! -z $db_name ]] && [[ $os_short_version == "rhel6" ]]
 				
 elif [[ ! -z $db_name ]] && [[ $os_short_version == "rhel7" ]]
 	then
-	        db_init=$(rpm -ql $db_name | grep -i service$ | grep -v "@"| cut -d/ -f6)
+	        db_init=$(rpm -ql $db_name | grep -i service$ | grep -v "@"| awk -F '/' '{print $(NF-0)}')
 		
 		## db_running ?
 		systemctl status $db_init > /dev/null
