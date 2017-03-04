@@ -100,7 +100,7 @@ if [[ ! -z $db_name ]] && [[ $os_short_version == "rhel6" ]]
 	
 		if [[ $db_running == "yes" ]] && [[ $db_enabled == "yes" ]]
 			then 
-				echo "\nMysql server: $db_name"
+				echo -e "\nMysql server: $db_name"
 				echo -e "------------> is installed and running and Enabled\n"
 				chkconfig --list $db_init
 
