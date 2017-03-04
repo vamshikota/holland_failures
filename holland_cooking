@@ -191,7 +191,7 @@ if [[ $db_running == "yes" ]]
 		echo -e "\nMysql is running with :"
 		lines 20; echo
 		cat $tf
-		echo -e "\n\n"
+		echo -e "\n"
 
 
 	## DB Accessible ??
@@ -250,7 +250,7 @@ fi;
 
 
 ##### Checking Holland now 
-echo 
+echo -e "\n\n"
 lines 20; echo
 echo -e "Checking Holland..";  
 lines 20; 
