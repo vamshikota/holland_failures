@@ -187,7 +187,7 @@ if [[ $db_running == "yes" ]]
 	
 	## Db instance parameters
 		tf=`mktemp`; for i in $(ps auxf | grep mysqld | grep -vE 'grep|safe'); do echo $i; done | grep "^--"| grep "="| sed -e 's/--//g; s/=/\t/g'| column -t > $tf
-		datadir=$(grep datadir $tf| awk '{print $2}'); echo $datadir
+		datadir=$(grep datadir $tf| awk '{print $2}'); 
 		echo -e "\nMysql is running with :"
 		lines 20; echo
 		cat $tf
