@@ -79,7 +79,7 @@ esac
 
 
 if [[ ! -z $db_name ]] && [[ $os_short_version == "rhel6" ]]; then 
-	db_init=$(rpm -ql $db_name | grep -i "init\.d" | cut -d/ -f5)
+	db_init=$(rpm -ql $db_name | grep -i "init\.d" | awk -F "/" '{print $(NF-0)}')
 
 	## db_running ?
 	service $db_init status > /dev/null
