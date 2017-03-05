@@ -32,7 +32,8 @@ if [[ -a /etc/redhat-release ]];
 			do echo $i | tr "A-Z" "a-z" | awk '$1~ /^(centos|red|hat|[0-9])/'; 
 			done | tr "\n" " " | sed 's/red\ hat/redhat/g');
 	else 
-		os=$(grep -i pretty_name /etc/*-release | cut -d= -f2 | sed 's/\"//g'| awk '{print $1,$2}'| tr "A-Z" "a-z"); fi; 
+		os=$(grep -i pretty_name /etc/*-release | cut -d= -f2 | sed 's/\"//g'| awk '{print $1,$2}'| tr "A-Z" "a-z"); 
+fi; 
 
 echo -e "\nOS: $os"
 
