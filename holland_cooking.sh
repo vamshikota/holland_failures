@@ -23,7 +23,6 @@ else
 	psa_version=$(rpm -q psa)
 fi;
 
-
 echo -e "Checking for Mysql or similar databases..\n"
 
 ## Finding OS
@@ -44,40 +43,30 @@ os_short_version=$(if [[ $os == ubuntu* ]]; then echo ubuntu; elif [[ $(echo $os
 ## Ubuntu or rhel ?
 os_short=$(if [[ $os == ubuntu* ]]; then echo ubuntu; else echo rhel; fi;);  
 
-
 ## Database installed?  if yes what ?
-
 case "$os_short_version" in
 	rhel6)
 		db_name=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server' | tail -1)
-
 		if [[ -z $db_name ]];	then 
 			echo "I cant find any Databases. You might want to check it manually"
-		fi
-		;;
+		fi ;;
 
 	rhel7)
 		db_name=$(rpm -qa| egrep -i 'mysql|mariadb|percona' | grep -i server)
-
 		if [[ -z $db_name ]]; then 
 			echo "I cant find any Databases. You might want to check it manually"
-		fi
-		;;
+		fi ;;
 
 	ubuntu)
 		echo "I dont support Ubuntu yet."	
-		exit 1
-		;;
+		exit 1 ;;
 	*)
 		echo "Unsupported Operating System"
-		exit 1
-		;;
+		exit 1 ;;
 esac
 
 
 # if db_installed, then is db_running ?
-
-
 if [[ ! -z $db_name ]] && [[ $os_short_version == "rhel6" ]]; then 
 	db_init=$(rpm -ql $db_name | grep -i "init\.d" | awk -F "/" '{print $(NF-0)}')
 
@@ -174,7 +163,6 @@ if [[ $db_running == "yes" ]]; 	then
 	cat $tf
 	echo -e "\n"
 
-
 	## DB Accessible ??
 	echo -e "\nMySQL configuration : ";  
 	lines 20; echo	
@@ -196,7 +184,6 @@ if [[ $db_running == "yes" ]]; 	then
 	lines 26; 	
 	echo;
 		
-
 	### Errors from db_logs
 	db_errors=`mktemp`
 	timeout 5 grep -i error $mysql_log | grep $(date +%y%m%d) | tail -20 > $db_errors
@@ -222,8 +209,6 @@ if [[ $db_running == "yes" ]]; 	then
 		
 	rm -rf $start_shut;  
 fi; 
-
-
 
 ##### Checking Holland now 
 echo -e "\n\n"
