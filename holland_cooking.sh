@@ -248,62 +248,56 @@ if rpm -qa | grep -i "holland-1." ;
 		du -hs $data_dir 
 		last_log=$(ls -1tr $(for j in $(for i in `ls -1t /var/log/holland/*`; do file -s $i ; done | grep -v empty |  awk -F ":" '{print $1}'); do echo "$j" `zcat $j | wc -l`; done | awk '$2 > 10' | awk '{print $1}') | tail -1)
 file -s $last_log | grep gzip > /dev/null;
-		if [ $? == 0 ];
-			then 
-				last_log_gzip=yes; 
-		fi; 
+	if [ $? == 0 ];	then 
+		last_log_gzip=yes; 
+	fi; 
 		
 
-				### If main logfile is empty.. look for .gz files
-		if [ -s $holl_log/holland.log ]; 
-			then 
-				log="$holl_log/holland.log"; 
-				echo $estimate; last_bkup=`mktemp`; 
-				zgrep -iE 'final|Backup completed' $holl_log/*.gz  > $last_bkup; 
-				grep -iE 'final|backup completed in' $holl_log/holland.log >> $last_bkup; 
-				backup_size=$(grep -i final $last_bkup  | tail -1 | awk '{print $(NF-0)}'); 
-				echo -e "\nLast backup size is ---\t $backup_size"; 
-				echo -n "Last successfull backup : "; 
-				complete=$(grep -i "completed in" $last_bkup | tail -1) ; 
-				echo $complete | awk '{print $1}' | cut -d ":" -f2; 
-				echo -en "\nLast backup duration :\n\t" $(echo $complete | awk '{print $4,$5,$6,$7,$8}') "\n"; 
-				rm -rf $last_bkup; 
-				echo -e "\n\nFrom backup directory"; 
-				ls -ld $dir/$backupset/newest/backup*; 
-				echo ; awk '{print $1}' $log | uniq | tail -2 > d; 
+	### If main logfile is empty.. look for .gz files
+	if [ -s $holl_log/holland.log ]; then 
+		log="$holl_log/holland.log"; 
+		echo $estimate; last_bkup=`mktemp`; 
+		zgrep -iE 'final|Backup completed' $holl_log/*.gz  > $last_bkup; 
+		grep -iE 'final|backup completed in' $holl_log/holland.log >> $last_bkup; 
+		backup_size=$(grep -i final $last_bkup  | tail -1 | awk '{print $(NF-0)}'); 
+		echo -e "\nLast backup size is ---\t $backup_size"; 
+		echo -n "Last successfull backup : "; 
+		complete=$(grep -i "completed in" $last_bkup | tail -1) ; 
+		echo $complete | awk '{print $1}' | cut -d ":" -f2; 
+		echo -en "\nLast backup duration :\n\t" $(echo $complete | awk '{print $4,$5,$6,$7,$8}') "\n"; 
+		rm -rf $last_bkup; 
+		echo -e "\n\nFrom backup directory"; 
+		ls -ld $dir/$backupset/newest/backup*; 
+		echo ; awk '{print $1}' $log | uniq | tail -2 > d; 
+		
+		for j in `cat d` ; do 
+			echo -e "\n$j\n"; 
+			grep $j $log | egrep -i 'error|warning|complete|estimated|final'; 
+			echo ""; 
+		done;  
 				
-				for j in `cat d` ; 
-					do 
-						echo -e "\n$j\n"; 
-						grep $j $log | egrep -i 'error|warning|complete|estimated|final'; 
-						echo ""; 
-					done;  
-				
-				rm -rf d; 
-			elif [[ -s $last_log  && $last_log_gzip == yes ]]; 
-				then 
-					log=$last_log;
-					echo $estimate; 
-					backup_size=`zgrep -i final $log | tail -1 | awk '{print $(NF-0)}'`;
-					echo -e "\nLast backup size is $backup_size"; 
-					echo ""; 
-					zcat $log | awk '{print $1}' | uniq | tail -2 > d; 
+		rm -rf d; 
+	elif [[ -s $last_log  && $last_log_gzip == yes ]]; then 
+		log=$last_log;
+		echo $estimate; 
+		backup_size=`zgrep -i final $log | tail -1 | awk '{print $(NF-0)}'`;
+		echo -e "\nLast backup size is $backup_size"; 
+		echo ""; 
+		zcat $log | awk '{print $1}' | uniq | tail -2 > d; 
 					
-					for j in `cat d` ; 
-						do 
-							echo -e "\n$j\n"; 
-							zgrep $j $log | egrep -i 'error|warning|complete|estimated|final'; 
-							echo;
-						done; 
-					rm -rf  d;
-		fi 
-elif rpm -qa | grep mysqlbackup ; 
-	then 
-		echo -e "\nmysqlbackup installed. Check logs manually";  
+		for j in `cat d` ; do 
+			echo -e "\n$j\n"; 
+			zgrep $j $log | egrep -i 'error|warning|complete|estimated|final'; 
+			echo;
+		done; 
+		rm -rf  d;
+	fi 
 
-elif ps auxf | grep mysql | egrep -v 'safe|grep'; 
-	then 
-		echo -e "\nNeither Holland Nor Mysqlbackup is installed but mysql is running.";  
+elif rpm -qa | grep mysqlbackup ; then 
+	echo -e "\nmysqlbackup installed. Check logs manually";  
+
+elif ps auxf | grep mysql | egrep -v 'safe|grep'; then 
+	echo -e "\nNeither Holland Nor Mysqlbackup is installed but mysql is running.";  
 
 else 
 	echo -e "\nNeither Holland Nor Mysqlbackup is installed. However mysql is also not running."; 
