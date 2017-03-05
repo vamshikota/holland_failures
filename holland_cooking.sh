@@ -50,20 +50,20 @@ os_short=$(if [[ $os == ubuntu* ]]; then echo ubuntu; else echo rhel; fi;);
 case "$os_short_version" in
 	rhel6)
 		db_name=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server ' | tail -1)
-		if [[ -z $db_name ]]
-			then 
-				echo "I cant find any Databases. You might want to check it manually"
-				exit 1
+
+		if [[ -z $db_name ]];	then 
+			echo "I cant find any Databases. You might want to check it manually"
 		fi
 		;;
+
 	rhel7)
 		db_name=$(rpm -qa| egrep -i 'mysql|mariadb|percona' | grep -i server)
-		if [[ -z $db_name ]]
-			then 
-				echo "I cant find any Databases. You might want to check it manually"
-				exit 1
+
+		if [[ -z $db_name ]]; then 
+			echo "I cant find any Databases. You might want to check it manually"
 		fi
 		;;
+
 	ubuntu)
 		echo "I dont support Ubuntu yet."	
 		exit 1
