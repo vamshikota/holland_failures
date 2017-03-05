@@ -13,26 +13,26 @@ lines()
 
 ## Is it a plesk boxA
 rpm -q psa 2>&1 > /dev/null
-if [[ $? == 1 ]]
-	then
-		echo "Non-Plesk Server"
-		plesk="no"
-	else
-		echo "Plesk Server"
-		plesk="yes"
-		psa_version=$(rpm -q psa)
+
+if [[ $? == 1 ]]; then
+	echo "Non-Plesk Server"
+	plesk="no"
+else
+	echo "Plesk Server"
+	plesk="yes"
+	psa_version=$(rpm -q psa)
 fi;
 
 
 echo -e "Checking for Mysql or similar databases..\n"
+
 ## Finding OS
-if [[ -a /etc/redhat-release ]]; 
-	then 
-		os=$(for i in $(cat /etc/redhat-release); 
-			do echo $i | tr "A-Z" "a-z" | awk '$1~ /^(centos|red|hat|[0-9])/'; 
-			done | tr "\n" " " | sed 's/red\ hat/redhat/g');
-	else 
-		os=$(grep -i pretty_name /etc/*-release | cut -d= -f2 | sed 's/\"//g'| awk '{print $1,$2}'| tr "A-Z" "a-z"); 
+if [[ -a /etc/redhat-release ]]; then 
+	os=$(for i in $(cat /etc/redhat-release); 
+		do echo $i | tr "A-Z" "a-z" | awk '$1~ /^(centos|red|hat|[0-9])/'; 
+		done | tr "\n" " " | sed 's/red\ hat/redhat/g');
+else 
+	os=$(grep -i pretty_name /etc/*-release | cut -d= -f2 | sed 's/\"//g'| awk '{print $1,$2}'| tr "A-Z" "a-z"); 
 fi; 
 
 echo -e "\nOS: $os"
@@ -78,175 +78,149 @@ esac
 # if db_installed, then is db_running ?
 
 
-if [[ ! -z $db_name ]] && [[ $os_short_version == "rhel6" ]]
-	then 
-		db_init=$(rpm -ql $db_name | grep -i "init\.d" | cut -d/ -f5)
+if [[ ! -z $db_name ]] && [[ $os_short_version == "rhel6" ]]; then 
+	db_init=$(rpm -ql $db_name | grep -i "init\.d" | cut -d/ -f5)
 
-		## db_running ?
-		service $db_init status > /dev/null
-		if [[ $? == 0 ]]
-			then 
-				db_running="yes"
-			else
-				db_running="no"
-		fi
+	## db_running ?
+	service $db_init status > /dev/null
+	if [[ $? == 0 ]]; then 
+		db_running="yes"
+	else
+		db_running="no"
+	fi
 
-		## db_enabled ?
-		if [[ $(chkconfig --list mysqld | awk '{print $5}' | cut -d: -f2) == "on" ]]
-			then 
-				db_enabled="yes"
-			else
-				db_enabled="no"
-		fi
-	
-		if [[ $db_running == "yes" ]] && [[ $db_enabled == "yes" ]]
-			then 
-				echo -e "\nMysql server: $db_name"
-				echo -e "------------> is installed and running and Enabled\n"
-				chkconfig --list $db_init
+	## db_enabled ?
+	if [[ $(chkconfig --list mysqld | awk '{print $5}' | cut -d: -f2) == "on" ]]
+		then 
+			db_enabled="yes"
+		else
+			db_enabled="no"
+	fi
 
-		elif [[ $db_running == "yes" ]] && [[ $db_enabled == "no" ]]
-			then
-				echo -e "\nMysql server: $db_name"
-				echo -e "------------> is installed and running BUT NOT ENABLED."
-				echo -e "You might want to enable it\n"
-				chkconfig --list $db_init
-				echo -e "\n\n"
-
-		elif [[ $db_running == "no" ]] && [[ $db_enabled == "yes" ]]
-			then
-				echo -e "\nMysql server: $db_name"
-				echo -e "Mysql is installed and enabled BUT NOT RUNNING.\n"
-				echo -e "You might want to start it\n"
-				service $db_init status
-				echo -e "\n\n"
-
-		elif [[ $db_running == "no" ]] && [[ $db_enabled == "no" ]]
-			then
-				echo -e "\nMysql is installed BUT it is NEITHER enabled NOR running."
-				echo -e "Probably this server is not used for databases\n"
-				chkconfig --list $db_init
-				service $db_init status
-				echo -e "\n\n"
-
-		fi
+	if [[ $db_running == "yes" ]] && [[ $db_enabled == "yes" ]]; then 
+		echo -e "\nMysql server: $db_name"
+		echo -e "------------> is installed and running and Enabled\n"
+		chkconfig --list $db_init
+	elif [[ $db_running == "yes" ]] && [[ $db_enabled == "no" ]]; then
+		echo -e "\nMysql server: $db_name"
+		echo -e "------------> is installed and running BUT NOT ENABLED."
+		echo -e "You might want to enable it\n"
+		chkconfig --list $db_init
+		echo -e "\n\n"
+	elif [[ $db_running == "no" ]] && [[ $db_enabled == "yes" ]]; then
+		echo -e "\nMysql server: $db_name"
+		echo -e "Mysql is installed and enabled BUT NOT RUNNING.\n"
+		echo -e "You might want to start it\n"
+		service $db_init status
+		echo -e "\n\n"
+	elif [[ $db_running == "no" ]] && [[ $db_enabled == "no" ]]; then
+		echo -e "\nMysql is installed BUT it is NEITHER enabled NOR running."
+		echo -e "Probably this server is not used for databases\n"
+		chkconfig --list $db_init
+		service $db_init status
+		echo -e "\n\n"
+	fi
 				
-elif [[ ! -z $db_name ]] && [[ $os_short_version == "rhel7" ]]
-	then
-	        db_init=$(rpm -ql $db_name | grep -i service$ | grep -v "@"| awk -F '/' '{print $(NF-0)}')
-		
-		## db_running ?
-		systemctl status $db_init > /dev/null
-                if [[ $? == 0 ]]
-			then 
-				db_running="yes"
-			else 
-				db_running="no"
-		fi
+elif [[ ! -z $db_name ]] && [[ $os_short_version == "rhel7" ]]; then
+        db_init=$(rpm -ql $db_name | grep -i service$ | grep -v "@"| awk -F '/' '{print $(NF-0)}')
+	
+	## db_running ?
+	systemctl status $db_init > /dev/null
+        if [[ $? == 0 ]]; then 
+		db_running="yes"
+	else 
+		db_running="no"
+	fi
 
-		## db_enabled :
-		if [[ $(systemctl is-enabled $db_init) == "enabled" ]] 
-			then 
-				db_enabled="yes"
-			else
-				db_enabled="no"
-		fi
+	## db_enabled :
+	if [[ $(systemctl is-enabled $db_init) == "enabled" ]]; then 
+		db_enabled="yes"
+	else
+		db_enabled="no"
+	fi
 
-		if [[ $db_running == "yes" ]] && [[ $db_enabled == "yes" ]]
-			then 
-				echo "\nMysql server: $db_name"
-				echo -e "------------> is installed and running and Enabled\n"
+	if [[ $db_running == "yes" ]] && [[ $db_enabled == "yes" ]]; then 
+		echo "\nMysql server: $db_name"
+		echo -e "------------> is installed and running and Enabled\n"
+	elif [[ $db_running == "yes" ]] && [[ $db_enabled == "no" ]]; then
+		echo -e "\nMysql server: $db_name"
+		echo -e "------------> is installed and running BUT NOT ENABLED."
+		echo -e "You might want to enable it\n"
 
-		elif [[ $db_running == "yes" ]] && [[ $db_enabled == "no" ]]
-			then
-				echo -e "\nMysql server: $db_name"
-				echo -e "------------> is installed and running BUT NOT ENABLED."
-				echo -e "You might want to enable it\n"
+	elif [[ $db_running == "no" ]] && [[ $db_enabled == "yes" ]]; then
+		echo "\nMysql server: $db_name"
+		echo -e "------------>  is installed and enabled BUT NOT RUNNING."
+		echo -e "You might want to start it\n"
+		systemctl status $db_init 
+		echo -e "\n\n"
 
-		elif [[ $db_running == "no" ]] && [[ $db_enabled == "yes" ]]
-			then
-				echo "\nMysql server: $db_name"
-				echo -e "------------>  is installed and enabled BUT NOT RUNNING."
-				echo -e "You might want to start it\n"
-				systemctl status $db_init 
-				echo -e "\n\n"
-
-		elif [[ $db_running == "no" ]] && [[ $db_enabled == "no" ]]
-			then
-				echo -e "\nMysql server: $db_name"
-				echo -e "Mysql is installed BUT it is NEITHER enabled NOR running."
-				echo -e "Probably this server is not used for databases\n"
-				systemctl status $db_init
-				echo -e "\n\n"
-		fi
+	elif [[ $db_running == "no" ]] && [[ $db_enabled == "no" ]]; then
+		echo -e "\nMysql server: $db_name"
+		echo -e "Mysql is installed BUT it is NEITHER enabled NOR running."
+		echo -e "Probably this server is not used for databases\n"
+		systemctl status $db_init
+		echo -e "\n\n"
+	fi
 fi	
 
 	
-if [[ $db_running == "yes" ]]
-
-	then 
+if [[ $db_running == "yes" ]]; 	then 	
 	
 	## Db instance parameters
-		tf=`mktemp`; for i in $(ps auxf | grep mysqld | grep -vE 'grep|safe'); do echo $i; done | grep "^--"| grep "="| sed -e 's/--//g; s/=/\t/g'| column -t > $tf
-		datadir=$(grep datadir $tf| awk '{print $2}'); 
-		echo -e "\nMysql is running with :"
-		lines 20; echo
-		cat $tf
-		echo -e "\n"
+	tf=`mktemp`; for i in $(ps auxf | grep mysqld | grep -vE 'grep|safe'); do echo $i; done | grep "^--"| grep "="| sed -e 's/--//g; s/=/\t/g'| column -t > $tf
+	datadir=$(grep datadir $tf| awk '{print $2}'); 
+	echo -e "\nMysql is running with :"
+	lines 20; echo
+	cat $tf
+	echo -e "\n"
 
 
 	## DB Accessible ??
-		echo -e "\nMySQL configuration : ";  
-		lines 20; echo	
+	echo -e "\nMySQL configuration : ";  
+	lines 20; echo	
 		
-		echo; 
-		mysqladmin stat &> /dev/null; 
+	echo; 
+	mysqladmin stat &> /dev/null; 
 		
-		if [ $? == "1" ]; 
-			then 
-				echo "ERROR    Cant connect to mysql;"; 
-				mysqladmin stat; 
-			else 
-				echo -e "Mysql Uptime  \t ==> \t" `mysqladmin stat | awk '{print $2/60/60, "Hours"}' ` "\n"; 
-				mysql -Nse "show variables like 'max_connections'; show status like 'max_used%'"| awk '{print $1,"\t--\t",$2}' | column -t
-				
-		fi;
+	if [ $? == "1" ]; then 
+		echo "ERROR    Cant connect to mysql;"; 
+		mysqladmin stat; 
+	else 
+		echo -e "Mysql Uptime  \t ==> \t" `mysqladmin stat | awk '{print $2/60/60, "Hours"}' ` "\n"; 
+		mysql -Nse "show variables like 'max_connections'; show status like 'max_used%'"| awk '{print $1,"\t--\t",$2}' | column -t
+	fi;
 
 	## Db_logfile		
-		mysql_log=$(mysql -Nse "show variables like 'log_error'" | awk '{print $2}')
-		echo -e "\n\nLog file : $mysql_log\n\nRecent Errors from logs :"; 
-		lines 26; 	
-		
-		echo;
+	mysql_log=$(mysql -Nse "show variables like 'log_error'" | awk '{print $2}')
+	echo -e "\n\nLog file : $mysql_log\n\nRecent Errors from logs :"; 
+	lines 26; 	
+	echo;
 		
 
 	### Errors from db_logs
-		db_errors=`mktemp`
-		timeout 5 grep -i error $mysql_log | grep $(date +%y%m%d) | tail -20 > $db_errors
-		if [[ ! -s $start_shut  ]] 
-			then
-				echo "None"
-			else
-				cat $db_errors
-		fi
+	db_errors=`mktemp`
+	timeout 5 grep -i error $mysql_log | grep $(date +%y%m%d) | tail -20 > $db_errors
+	if [[ ! -s $start_shut  ]]; then
+		echo "None"
+	else
+		cat $db_errors
+	fi
 				
-		echo -e "\n\n(If any) Mysql Stop/starts today :" ; 
-		lines 35
-		echo; 
+	echo -e "\n\n(If any) Mysql Stop/starts today :" ; 
+	lines 35
+	echo; 
 
 	### Finding db starts / shutdowns
-		start_shut=`mktemp`; 
-		timeout 5 egrep 'starting shutdown|ready for connections' -i $mysql_log | grep $(date +%y%m%d) > $start_shut ; 
+	start_shut=`mktemp`; 
+	timeout 5 egrep 'starting shutdown|ready for connections' -i $mysql_log | grep $(date +%y%m%d) > $start_shut ; 
 		
-		if [[ ! -s $start_shut ]]; 
-			then 
-				echo "None."; 
-			else 
-				cat $start_shut | tail -20; 
-		fi; 
+	if [[ ! -s $start_shut ]]; then 
+		echo "None."; 
+	else 
+		cat $start_shut | tail -20; 
+	fi; 
 		
-		rm -rf $start_shut;  
-	
+	rm -rf $start_shut;  
 fi; 
 
 
