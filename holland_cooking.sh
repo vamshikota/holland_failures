@@ -46,7 +46,12 @@ os_short=$(if [[ $os == ubuntu* ]]; then echo ubuntu; else echo rhel; fi;);
 ## Database installed?  if yes what ?
 case "$os_short_version" in
 	rhel6)
-		db_name=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server' | tail -1)
+		if [[ -a $(which mysqld) ]]; then 
+			db_name=rpm -qf $(which mysqld); 
+		else
+			db_name=$(rpm -qa| egrep -i 'mysql-server|mysql[0-9][0-9]u?-server|mariadb-server|mariadb[0-9][0-9][0-9]u-server|percona-server-server' | tail -1); 
+		fi
+		
 		if [[ -z $db_name ]];	then 
 			echo "I cant find any Databases. You might want to check it manually"
 		fi ;;
